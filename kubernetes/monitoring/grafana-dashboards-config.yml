@@ -1,0 +1,174 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+  namespace: monitoring
+data:
+  kubernetes-dashboard.json: |
+    {
+      "annotations": { "list": [] },
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 1,
+      "id": null,
+      "links": [],
+      "panels": [
+        {
+          "title": "CPU Kullanımı (Node)",
+          "type": "gauge",
+          "gridPos": { "h": 6, "w": 6, "x": 0, "y": 0 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [{ "expr": "100 - (avg(rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)", "legendFormat": "CPU %" }],
+          "fieldConfig": { "defaults": { "thresholds": { "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 60}, {"color": "red", "value": 80}] }, "max": 100, "min": 0, "unit": "percent" } }
+        },
+        {
+          "title": "RAM Kullanımı (Node)",
+          "type": "gauge",
+          "gridPos": { "h": 6, "w": 6, "x": 6, "y": 0 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [{ "expr": "(1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) * 100", "legendFormat": "RAM %" }],
+          "fieldConfig": { "defaults": { "thresholds": { "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 60}, {"color": "red", "value": 80}] }, "max": 100, "min": 0, "unit": "percent" } }
+        },
+        {
+          "title": "Disk Kullanımı",
+          "type": "gauge",
+          "gridPos": { "h": 6, "w": 6, "x": 12, "y": 0 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [{ "expr": "(1 - sum(node_filesystem_avail_bytes{fstype=~\"ext4|xfs\"}) / sum(node_filesystem_size_bytes{fstype=~\"ext4|xfs\"})) * 100", "legendFormat": "Disk %" }],
+          "fieldConfig": { "defaults": { "thresholds": { "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 70}, {"color": "red", "value": 90}] }, "max": 100, "min": 0, "unit": "percent" } }
+        },
+        {
+          "title": "Pod Durumu",
+          "type": "stat",
+          "gridPos": { "h": 6, "w": 6, "x": 18, "y": 0 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            { "expr": "count(kube_pod_status_phase{phase=\"Running\"})", "legendFormat": "Running" },
+            { "expr": "count(kube_pod_status_phase{phase=\"Pending\"})", "legendFormat": "Pending" },
+            { "expr": "count(kube_pod_status_phase{phase=\"Failed\"})", "legendFormat": "Failed" }
+          ],
+          "fieldConfig": { "defaults": { "thresholds": { "steps": [{"color": "green", "value": null}] } } }
+        },
+        {
+          "title": "Container CPU Kullanımı",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [{ "expr": "sum(rate(container_cpu_usage_seconds_total{pod!=\"\"}[5m])) by (pod)", "legendFormat": "{{ pod }}" }],
+          "fieldConfig": { "defaults": { "unit": "short" } }
+        },
+        {
+          "title": "Container Bellek Kullanımı",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [{ "expr": "sum(container_memory_working_set_bytes{pod!=\"\"}) by (pod)", "legendFormat": "{{ pod }}" }],
+          "fieldConfig": { "defaults": { "unit": "bytes" } }
+        },
+        {
+          "title": "Pod Restart Count",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 14 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [{ "expr": "kube_pod_container_status_restarts_total{pod=~\"webapp.*\"}", "legendFormat": "{{ pod }}" }],
+          "fieldConfig": { "defaults": { "unit": "short" } }
+        },
+        {
+          "title": "Deployment Replica Durumu",
+          "type": "table",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 14 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            { "expr": "kube_deployment_status_replicas", "legendFormat": "{{ deployment }} - Total", "format": "table", "instant": true },
+            { "expr": "kube_deployment_status_replicas_available", "legendFormat": "{{ deployment }} - Available", "format": "table", "instant": true }
+          ]
+        }
+      ],
+      "schemaVersion": 39,
+      "tags": ["kubernetes", "monitoring"],
+      "templating": { "list": [] },
+      "time": { "from": "now-1h", "to": "now" },
+      "title": "Kubernetes Dashboard",
+      "uid": "k8s-dashboard-001"
+    }
+  application-dashboard.json: |
+    {
+      "annotations": { "list": [] },
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 1,
+      "id": null,
+      "links": [],
+      "panels": [
+        {
+          "title": "Uygulama Durumu (Availability)",
+          "type": "stat",
+          "gridPos": { "h": 5, "w": 6, "x": 0, "y": 0 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [{ "expr": "up{kubernetes_pod_name=~\"webapp.*\"}", "legendFormat": "{{ kubernetes_pod_name }}" }],
+          "fieldConfig": { "defaults": { "mappings": [{"type": "value", "options": {"0": {"text": "DOWN", "color": "red"}, "1": {"text": "UP", "color": "green"}}}], "thresholds": { "steps": [{"color": "red", "value": null}, {"color": "green", "value": 1}] } } }
+        },
+        {
+          "title": "HTTP Request Rate (req/s)",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 9, "x": 6, "y": 0 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [{ "expr": "sum(rate(http_server_requests_seconds_count{application=\"assignment\"}[5m])) by (uri, method)", "legendFormat": "{{ method }} {{ uri }}" }],
+          "fieldConfig": { "defaults": { "unit": "reqps" } }
+        },
+        {
+          "title": "Toplam Request Sayısı",
+          "type": "stat",
+          "gridPos": { "h": 5, "w": 9, "x": 15, "y": 0 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [{ "expr": "sum(http_server_requests_seconds_count{application=\"assignment\"})", "legendFormat": "Total Requests" }],
+          "fieldConfig": { "defaults": { "thresholds": { "steps": [{"color": "blue", "value": null}] } } }
+        },
+        {
+          "title": "Ortalama Response Time (s)",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            { "expr": "rate(http_server_requests_seconds_sum{application=\"assignment\",uri!=\"/actuator/prometheus\"}[5m]) / rate(http_server_requests_seconds_count{application=\"assignment\",uri!=\"/actuator/prometheus\"}[5m])", "legendFormat": "Avg - {{ uri }}" }
+          ],
+          "fieldConfig": { "defaults": { "unit": "s" } }
+        },
+        {
+          "title": "Error Rate (4xx/5xx)",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            { "expr": "sum(rate(http_server_requests_seconds_count{application=\"assignment\",status=~\"4..\"}[5m]))", "legendFormat": "4xx Errors" },
+            { "expr": "sum(rate(http_server_requests_seconds_count{application=\"assignment\",status=~\"5..\"}[5m]))", "legendFormat": "5xx Errors" }
+          ],
+          "fieldConfig": { "defaults": { "unit": "reqps", "custom": { "lineWidth": 2 } } }
+        },
+        {
+          "title": "JVM Bellek Kullanımı",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [
+            { "expr": "jvm_memory_used_bytes{application=\"assignment\", area=\"heap\"}", "legendFormat": "Heap Used - {{ id }}" },
+            { "expr": "jvm_memory_max_bytes{application=\"assignment\", area=\"heap\"}", "legendFormat": "Heap Max - {{ id }}" }
+          ],
+          "fieldConfig": { "defaults": { "unit": "bytes" } }
+        },
+        {
+          "title": "Aktif Thread Sayısı",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "targets": [{ "expr": "jvm_threads_live_threads{application=\"assignment\"}", "legendFormat": "Live Threads" }],
+          "fieldConfig": { "defaults": { "unit": "short" } }
+        }
+      ],
+      "schemaVersion": 39,
+      "tags": ["application", "spring-boot", "monitoring"],
+      "templating": { "list": [] },
+      "time": { "from": "now-1h", "to": "now" },
+      "title": "Application Dashboard",
+      "uid": "app-dashboard-001"
+    }

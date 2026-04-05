@@ -1,5 +1,10 @@
-FROM openjdk:17-jdk-slim
+FROM eclipse-temurin:17-jdk-jammy
 
-COPY build/libs/assignment-0.0.1-SNAPSHOT.jar app.jar
+ARG JAR_FILE=build/libs/assignment-0.0.1-SNAPSHOT.jar
+COPY ${JAR_FILE} app.jar
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
+EXPOSE 8090
+
+ENV JAVA_OPTS="-Xmx256m -Xms128m"
+
+ENTRYPOINT ["sh", "-c", "java ${JAVA_OPTS} -jar app.jar"]
