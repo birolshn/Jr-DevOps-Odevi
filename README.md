@@ -59,4 +59,4 @@ Servislere erişmek için bulunduğunuz terminalden aşağıdaki tünel komutlar
 - **Prometheus Paneli:** `minikube service prometheus -n monitoring --url`
 - **Zabbix Paneli:** `http://localhost:8080` (Admin / zabbix)
 
-*(Not: Grafana için JSON formatında dışa aktarılmış dashboard tasarımları projenin JSON klasörü içerisinde mevcuttur)*
+*(Not: Grafana için JSON formatında dışa aktarılmış dashboard tasarımları projenin grafana_dashboard_json_files klasörü içerisinde mevcuttur)*
